@@ -88,5 +88,3 @@ rl
     log('Adios!');
     process.exit(0);
 });
-
-

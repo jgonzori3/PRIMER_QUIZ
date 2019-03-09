@@ -151,8 +151,27 @@ exports.editCmd = (rl, id) => {
  * @param id Clave del quiz a probar.
  */
 exports.testCmd = (rl, id) => {
-    log('Probar el quiz indicado.', 'red');
-    rl.prompt();
+  if (typeof id === "undefined") {
+      errorlog(`Falta el parámetro id.`);
+      rl.prompt();
+    }else{
+      try{
+        const quiz=model.getByIndex(id);
+        rl.question(colorize(quiz.question+'? ','red'),respuesta=>{
+          if(respuesta.toUpperCase().trim() === quiz.answer.toUpperCase()){
+            biglog('CORRECTO','green');
+            rl.prompt();
+          }else{
+            biglog('INCORRECTO','red');
+            rl.prompt();
+          }
+        });
+      }catch (error) {
+          errorlog(error.message);
+          rl.prompt();
+      }
+    }
+
 };
 
 
@@ -162,9 +181,68 @@ exports.testCmd = (rl, id) => {
  *
  * @param rl Objeto readline usado para implementar el CLI.
  */
+
 exports.playCmd = rl => {
-    log('Jugar.', 'red');
-    rl.prompt();
+    let score = 0;
+    let toBeResolved=[];
+    let cont;
+    for(cont=0;cont<model.count();cont++){
+      toBeResolved.push(cont);
+    }
+    let i,j,k;
+    let t;
+    let u=0;
+
+    for(i=toBeResolved.length;i;i--){
+      j=Math.floor(Math.random()*i);
+      k=toBeResolved[i-1];
+      toBeResolved[i-1]=toBeResolved[j];
+      toBeResolved[j]=k;
+    }
+
+  const playOne=()=>{
+    t=toBeResolved[u];
+    if(toBeResolved.length>0){
+      if(u>toBeResolved.length-1){
+        log('su resultado final es:','blue');
+        biglog(score,'green');
+        rl.prompt();
+      }else{
+
+
+
+        score=u;
+        try{
+          const quiz=model.getByIndex(t);
+          rl.question(colorize(quiz.question+'? ','red'),respuesta=>{
+            if(respuesta.toUpperCase().trim() === quiz.answer.toUpperCase()){
+              score=score+1;
+              log('CORRECTO - llevas '+score+' aciertos.','green');
+              u=u+1;
+              playOne();
+
+
+            }else{
+              log('INCORRECTO /n Fin del examen. Aciertos:','red');
+              biglog(score,'red');
+              rl.prompt();
+            }
+          });
+        }catch (error) {
+            errorlog(error.message);
+            rl.prompt();
+        }
+
+    }}else{
+      log('No hay preguntas de test, utilice la funcion add para añadir nuevas preguntas al quiz','blue');
+      rl.prompt();
+    }
+
+  }
+
+
+  playOne();
+
 };
 
 
@@ -174,9 +252,9 @@ exports.playCmd = rl => {
  * @param rl Objeto readline usado para implementar el CLI.
  */
 exports.creditsCmd = rl => {
-    log('Autores de la práctica:');
-    log('Nombre 1', 'green');
-    log('Nombre 2', 'green');
+    log('Autor de la práctica:');
+    log('Jesús González Zorita', 'green');
+
     rl.prompt();
 };
 
@@ -189,4 +267,3 @@ exports.creditsCmd = rl => {
 exports.quitCmd = rl => {
     rl.close();
 };
-
